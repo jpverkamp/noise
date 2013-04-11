@@ -2,7 +2,7 @@
 
 (require
  picturing-programs
- "simplex-noise.rkt")
+ "noise.rkt")
 
 ; Clamp a number in the given range to [0, 1]
 (define (clamp min max n)
