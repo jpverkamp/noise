@@ -1,18 +1,23 @@
-#lang racket
+#lang typed/racket
 
 ; Direct translation of:
 ; http://webstaff.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
 
 (provide
  perlin
- simplex)
+ #;simplex)
 
+(require
+ racket/flonum)
+
+(: grad3 (Vectorof (Vector Integer Integer Integer)))
 (define grad3
   '#(#( 1  1  0) #(-1  1  0) #( 1 -1  0) #(-1 -1  0)
      #( 1  0  1) #(-1  0  1) #( 1  0 -1) #(-1  0 -1) 
      #( 0  1  1) #( 0 -1  1) #( 0  1 -1) #( 0 -1 -1)))
 
-(define p
+(: p (Vectorof Byte))
+(define p 
   '#(151 160 137 91 90 15 131 13 201 95 96 53 194 233 7 
      225 140 36 103 30 69 142 8 99 37 240 21 10 23 190 6 
      148 247 120 234 75 0 26 197 62 94 252 219 203 117 35 
@@ -33,27 +38,36 @@
      141 128 195 78 66 215 61 156 180))
 
 ; To remove the need for index wrapping, double the permutation table length
+(: perm (Vectorof Byte))
 (define perm (vector-append p p))
 
 ; This method is a *lot* faster than using (int)Math.floor(x)
 ; TODO: Not sure if this is actually true in Racket
+(: fast-floor (Flonum -> Integer))
 (define (fast-floor x)
-  (inexact->exact (floor x)))
+  (fl->exact-integer (floor x)))
 
+(: dot ((Vector Integer Integer Integer) Flonum Flonum Flonum -> Flonum))
 (define (dot g x y z)
   (+ (* (vector-ref g 0) x)
      (* (vector-ref g 1) y)
      (* (vector-ref g 2) z)))
 
+(: mix (Flonum Flonum Flonum -> Flonum))
 (define (mix a b t)
-  (+ (* (- 1 t) a) (* t b)))
+  (+ (* (- 1.0 t) a) (* t b)))
 
+(: fade (Flonum -> Flonum))
 (define (fade t)
-  (* t t t (+ (* t (- (* t 6) 15)) 10)))
+  (* t t t (+ (* t (- (* t 6.0) 15.0)) 10.0)))
 
 ; Classic Perlin noise, 3D version
+(: perlin (case-> (Flonum -> Flonum)
+                  (Flonum Flonum -> Flonum)
+                  (Flonum Flonum Flonum -> Flonum)))
 (define (perlin x [y 0.0] [z 0.0])
   ; Find unit grid cell containing point
+  (: X Integer) (: Y Integer) (: Z Integer)
   (define X (fast-floor x))
   (define Y (fast-floor y))
   (define Z (fast-floor z))
@@ -69,6 +83,8 @@
   (set! Z (bitwise-and Z 255))
   
   ; Calculate a set of eight hashed gradient indices
+  (: gi000 Integer) (: gi001 Integer) (: gi010 Integer) (: gi011 Integer)
+  (: gi100 Integer) (: gi101 Integer) (: gi110 Integer) (: gi111 Integer)
   (define gi000 (remainder (vector-ref perm (+ X   (vector-ref perm (+ Y   (vector-ref perm Z))))) 12))
   (define gi001 (remainder (vector-ref perm (+ X   (vector-ref perm (+ Y   (vector-ref perm (+ Z 1)))))) 12))
   (define gi010 (remainder (vector-ref perm (+ X   (vector-ref perm (+ Y 1 (vector-ref perm Z))))) 12))
@@ -79,6 +95,8 @@
   (define gi111 (remainder (vector-ref perm (+ X 1 (vector-ref perm (+ Y 1 (vector-ref perm (+ Z 1)))))) 12))
   
   ; Calculate noise contributions from each of the eight corners
+  (: n000 Flonum) (: n001 Flonum) (: n010 Flonum) (: n011 Flonum)
+  (: n100 Flonum) (: n101 Flonum) (: n110 Flonum) (: n111 Flonum)
   (define n000 (dot (vector-ref grad3 gi000) x       y       z))
   (define n100 (dot (vector-ref grad3 gi100) (- x 1) y       z))
   (define n010 (dot (vector-ref grad3 gi010) x       (- y 1) z))
@@ -89,17 +107,20 @@
   (define n111 (dot (vector-ref grad3 gi111) (- x 1) (- y 1) (- z 1)))
   
   ; Compute the fade curve value for each of x, y, z
+  (: u Flonum) (: v Flonum) (: w Flonum)
   (define u (fade x))
   (define v (fade y))
   (define w (fade z))
   
   ; Interpolate along x the contributions from each of the corners
+  (: nx00 Flonum) (: nx01 Flonum) (: nx10 Flonum) (: nx11 Flonum)
   (define nx00 (mix n000 n100 u))
   (define nx01 (mix n001 n101 u))
   (define nx10 (mix n010 n110 u))
   (define nx11 (mix n011 n111 u))
   
   ; Interpolate the four results along y
+  (: nxy0 Flonum) (: nxy1 Flonum)
   (define nxy0 (mix nx00 nx10 v))
   (define nxy1 (mix nx01 nx11 v))
   
@@ -107,9 +128,9 @@
   (mix nxy0 nxy1 w))
 
 ; 3D simplex noise
-(define F3 (/ 1.0 3.0)) ; Very nice and simple skew factor for 3D
-(define G3 (/ 1.0 6.0)) ; Very nice and simple unskew factor, too
-(define (simplex xin [yin 0.0] [zin 0.0])
+#;(define F3 (/ 1.0 3.0)) ; Very nice and simple skew factor for 3D
+#;(define G3 (/ 1.0 6.0)) ; Very nice and simple unskew factor, too
+#;(define (simplex xin [yin 0.0] [zin 0.0])
   ; Skew the input space to determine which simplex cell we're in
   (define s (* (+ xin yin zin) F3)) 
   (define i (fast-floor (+ xin s)))
