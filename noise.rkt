@@ -7,10 +7,7 @@
  perlin
  simplex)
 
-(require
- racket/flonum)
-
-(: grad3 (Vectorof (Vector Flonum Flonum Flonum)))
+(: grad3 (Vectorof (Vector Real Real Real)))
 (define grad3
   '#(#( 1.0  1.0  0.0) #(-1.0  1.0  0.0) #( 1.0 -1.0  0.0) #(-1.0 -1.0  0.0)
      #( 1.0  0.0  1.0) #(-1.0  0.0  1.0) #( 1.0  0.0 -1.0) #(-1.0  0.0 -1.0) 
@@ -43,29 +40,29 @@
 
 ; This method is a *lot* faster than using (int)Math.floor(x)
 ; TODO: Not sure if this is actually true in Racket
-(: fast-floor (Flonum -> Integer))
+(: fast-floor (Real -> Integer))
 (define (fast-floor x)
-  (fl->exact-integer (floor x)))
+  (exact-floor x))
 
-(: dot ((Vector Flonum Flonum Flonum) Flonum Flonum Flonum -> Flonum))
+(: dot ((Vector Real Real Real) Real Real Real -> Real))
 (define (dot g x y z)
    (+ (* (vector-ref g 0) x)
       (* (vector-ref g 1) y)
       (* (vector-ref g 2) z)))
 
-(: mix (Flonum Flonum Flonum -> Flonum))
+(: mix (Real Real Real -> Real))
 (define (mix a b t)
   (+ (* (- 1.0 t) a) (* t b)))
 
-(: fade (Flonum -> Flonum))
+(: fade (Real -> Real))
 (define (fade t)
   (* t t t (+ (* t (- (* t 6.0) 15.0)) 10.0)))
 
 ; Classic Perlin noise, 3D version
 (: perlin
-   (case-> (Flonum -> Flonum)
-           (Flonum Flonum -> Flonum)
-           (Flonum Flonum Flonum -> Flonum)))
+   (case-> (Real -> Real)
+           (Real Real -> Real)
+           (Real Real Real -> Real)))
 (define (perlin x [y 0.0] [z 0.0])
   ; Find unit grid cell containing point
   (: X Integer) (: Y Integer) (: Z Integer)
@@ -96,8 +93,8 @@
   (define gi111 (remainder (vector-ref perm (+ X 1 (vector-ref perm (+ Y 1 (vector-ref perm (+ Z 1)))))) 12))
   
   ; Calculate noise contributions from each of the eight corners
-  (: n000 Flonum) (: n001 Flonum) (: n010 Flonum) (: n011 Flonum)
-  (: n100 Flonum) (: n101 Flonum) (: n110 Flonum) (: n111 Flonum)
+  (: n000 Real) (: n001 Real) (: n010 Real) (: n011 Real)
+  (: n100 Real) (: n101 Real) (: n110 Real) (: n111 Real)
   (define n000 (dot (vector-ref grad3 gi000) x       y       z))
   (define n100 (dot (vector-ref grad3 gi100) (- x 1) y       z))
   (define n010 (dot (vector-ref grad3 gi010) x       (- y 1) z))
@@ -108,20 +105,20 @@
   (define n111 (dot (vector-ref grad3 gi111) (- x 1) (- y 1) (- z 1)))
   
   ; Compute the fade curve value for each of x, y, z
-  (: u Flonum) (: v Flonum) (: w Flonum)
+  (: u Real) (: v Real) (: w Real)
   (define u (fade x))
   (define v (fade y))
   (define w (fade z))
   
   ; Interpolate along x the contributions from each of the corners
-  (: nx00 Flonum) (: nx01 Flonum) (: nx10 Flonum) (: nx11 Flonum)
+  (: nx00 Real) (: nx01 Real) (: nx10 Real) (: nx11 Real)
   (define nx00 (mix n000 n100 u))
   (define nx01 (mix n001 n101 u))
   (define nx10 (mix n010 n110 u))
   (define nx11 (mix n011 n111 u))
   
   ; Interpolate the four results along y
-  (: nxy0 Flonum) (: nxy1 Flonum)
+  (: nxy0 Real) (: nxy1 Real)
   (define nxy0 (mix nx00 nx10 v))
   (define nxy1 (mix nx01 nx11 v))
   
@@ -129,16 +126,16 @@
   (mix nxy0 nxy1 w))
 
 ; 3D simplex noise
-(: F3 Flonum) (: G3 Flonum)
+(: F3 Real) (: G3 Real)
 (define F3 (/ 1.0 3.0)) ; Very nice and simple skew factor for 3D
 (define G3 (/ 1.0 6.0)) ; Very nice and simple unskew factor, too
 (: simplex 
-   (case-> (Flonum -> Flonum)
-           (Flonum Flonum -> Flonum)
-           (Flonum Flonum Flonum -> Flonum)))
+   (case-> (Real -> Real)
+           (Real Real -> Real)
+           (Real Real Real -> Real)))
 (define (simplex xin [yin 0.0] [zin 0.0])
   ; Skew the input space to determine which simplex cell we're in
-  (: s Flonum)
+  (: s Real)
   (define s (* (+ xin yin zin) F3)) 
   
   (: i Integer) (: j Integer) (: k Integer)
@@ -146,11 +143,11 @@
   (define j (fast-floor (+ yin s)))
   (define k (fast-floor (+ zin s)))
   
-  (: t Flonum)
-  (define t (real->double-flonum (* (+ i j k) G3)))
+  (: t Real)
+  (define t (* (+ i j k) G3))
   
-  (: X0 Flonum) (: Y0 Flonum) (: Z0 Flonum)
-  (: x0 Flonum) (: y0 Flonum) (: z0 Flonum)
+  (: X0 Real) (: Y0 Real) (: Z0 Real)
+  (: x0 Real) (: y0 Real) (: z0 Real)
   (define X0 (- i t)) ; Unskew the cell origin back to (x,y,z) space
   (define Y0 (- j t))
   (define Z0 (- k t))
@@ -175,9 +172,9 @@
   ; a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
   ; a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
   ; c = 1/6.
-  (: x1 Flonum) (: y1 Flonum) (: z1 Flonum) 
-  (: x2 Flonum) (: y2 Flonum) (: z2 Flonum) 
-  (: x3 Flonum) (: y3 Flonum) (: z3 Flonum) 
+  (: x1 Real) (: y1 Real) (: z1 Real) 
+  (: x2 Real) (: y2 Real) (: z2 Real) 
+  (: x3 Real) (: y3 Real) (: z3 Real) 
   (define x1 (+ (- x0 i1) G3)) ; Offsets for second corner in (x,y,z) coords
   (define y1 (+ (- y0 j1) G3))
   (define z1 (+ (- z0 k1) G3))
@@ -201,7 +198,7 @@
   (define gi3 (remainder (vector-ref perm (+ ii 1  (vector-ref perm (+ jj 1  (vector-ref perm (+ kk 1)))))) 12))
   
   ; Calculate the contribution from the four corners
-  (: t0 Flonum) (: n0 Flonum)
+  (: t0 Real) (: n0 Real)
   (define t0 (- 0.5 (* x0 x0) (* y0 y0) (* z0 z0)))
   (define n0
     (if (< t0 0)
@@ -210,7 +207,7 @@
           (set! t0 (* t0 t0))
           (* t0 t0 (dot (vector-ref grad3 gi0) x0 y0 z0)))))
   
-  (: t1 Flonum) (: n1 Flonum)
+  (: t1 Real) (: n1 Real)
   (define t1 (- 0.5 (* x1 x1) (* y1 y1) (* z1 z1)))
   (define n1
     (if (< t1 0)
@@ -219,7 +216,7 @@
           (set! t1 (* t1 t1))
           (* t1 t1 (dot (vector-ref grad3 gi1) x1 y1 z1)))))
   
-  (: t2 Flonum) (: n2 Flonum)
+  (: t2 Real) (: n2 Real)
   (define t2 (- 0.5 (* x2 x2) (* y2 y2) (* z2 z2)))
   (define n2
     (if (< t2 0)
@@ -228,7 +225,7 @@
           (set! t2 (* t2 t2))
           (* t2 t2 (dot (vector-ref grad3 gi2) x2 y2 z2)))))
   
-  (: t3 Flonum) (: n3 Flonum)
+  (: t3 Real) (: n3 Real)
   (define t3 (- 0.5 (* x3 x3) (* y3 y3) (* z3 z3)))
   (define n3
     (if (< t3 0)
