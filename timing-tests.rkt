@@ -1,4 +1,4 @@
-#lang racket
+#lang typed/racket
 
 (require 
  "noise.rkt"
@@ -17,6 +17,7 @@
 
 (printf "\n--- no images ---\n")
 
+(: for-test ((Real Real -> Real) -> Void))
 (define (for-test f)
   (printf "~a: " f)
   (time 
@@ -30,9 +31,11 @@
 
 (printf "\n--- no images or loops ---\n")
 
+(: let-loop-test ((Real Real -> Real) -> Void))
 (define (let-loop-test f)
+  (printf "~a: " f)
   (time
-   (let loop ([x 0] [y 0])
+   (let: loop : Void ([x : Integer 0] [y : Integer 0])
      (cond
        [(= x 256) (void)]
        [(= y 256) (loop (+ x 1) 0)]
