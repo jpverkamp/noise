@@ -4,6 +4,11 @@
  picturing-programs
  "noise.rkt")
 
+(provide
+ build-perlin-image
+ build-simplex-image
+ build-colored-simplex-image)
+
 ; Clamp a number in the given range to [0, 1]
 (define (clamp min max n)
   (/ (- n min) (- max min)))
@@ -19,8 +24,8 @@
   (build-image 
    w h
    (lambda (x y)
-     (define g (clamp -1.0 1.0 (perlin (* scale (/ x w))
-                                       (* scale (/ y h)))))
+     (define g (clamp -1.0 1.0 (perlin (real->double-flonum (* scale (/ x w)))
+                                       (real->double-flonum (* scale (/ y h))))))
      (float-color g g g))))
 
 ; Build an image using simplex noise
@@ -28,8 +33,8 @@
   (build-image 
    w h
    (lambda (x y)
-     (define g (clamp -1.0 1.0 (simplex (* scale (/ x w))
-                                        (* scale (/ y h)))))
+     (define g (clamp -1.0 1.0 (simplex (real->double-flonum (* scale (/ x w)))
+                                        (real->double-flonum (* scale (/ y h))))))
      (float-color g g g))))
 
 ; Build a more colorful image using simplex noise
@@ -38,9 +43,12 @@
    w h
    (lambda (x y)
      (float-color
-      (clamp -1.0 1.0 (simplex (* scale (/ x w)) (* scale (/ y h)) -1.0))
-      (clamp -1.0 1.0 (simplex (* scale (/ x w)) (* scale (/ y h))  0.0))
-      (clamp -1.0 1.0 (simplex (* scale (/ x w)) (* scale (/ y h))  1.0))))))
+      (clamp -1.0 1.0 (simplex (real->double-flonum (* scale (/ x w))) 
+                               (real->double-flonum (* scale (/ y h))) -1.0))
+      (clamp -1.0 1.0 (simplex (real->double-flonum (* scale (/ x w))) 
+                               (real->double-flonum (* scale (/ y h)))  0.0))
+      (clamp -1.0 1.0 (simplex (real->double-flonum (* scale (/ x w))) 
+                               (real->double-flonum (* scale (/ y h)))  1.0))))))
                   
                   
                   

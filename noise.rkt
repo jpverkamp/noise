@@ -5,16 +5,16 @@
 
 (provide
  perlin
- #;simplex)
+ simplex)
 
 (require
  racket/flonum)
 
-(: grad3 (Vectorof (Vector Integer Integer Integer)))
+(: grad3 (Vectorof (Vector Flonum Flonum Flonum)))
 (define grad3
-  '#(#( 1  1  0) #(-1  1  0) #( 1 -1  0) #(-1 -1  0)
-     #( 1  0  1) #(-1  0  1) #( 1  0 -1) #(-1  0 -1) 
-     #( 0  1  1) #( 0 -1  1) #( 0  1 -1) #( 0 -1 -1)))
+  '#(#( 1.0  1.0  0.0) #(-1.0  1.0  0.0) #( 1.0 -1.0  0.0) #(-1.0 -1.0  0.0)
+     #( 1.0  0.0  1.0) #(-1.0  0.0  1.0) #( 1.0  0.0 -1.0) #(-1.0  0.0 -1.0) 
+     #( 0.0  1.0  1.0) #( 0.0 -1.0  1.0) #( 0.0  1.0 -1.0) #( 0.0 -1.0 -1.0)))
 
 (: p (Vectorof Byte))
 (define p 
@@ -47,11 +47,11 @@
 (define (fast-floor x)
   (fl->exact-integer (floor x)))
 
-(: dot ((Vector Integer Integer Integer) Flonum Flonum Flonum -> Flonum))
+(: dot ((Vector Flonum Flonum Flonum) Flonum Flonum Flonum -> Flonum))
 (define (dot g x y z)
-  (+ (* (vector-ref g 0) x)
-     (* (vector-ref g 1) y)
-     (* (vector-ref g 2) z)))
+   (+ (* (vector-ref g 0) x)
+      (* (vector-ref g 1) y)
+      (* (vector-ref g 2) z)))
 
 (: mix (Flonum Flonum Flonum -> Flonum))
 (define (mix a b t)
@@ -62,9 +62,10 @@
   (* t t t (+ (* t (- (* t 6.0) 15.0)) 10.0)))
 
 ; Classic Perlin noise, 3D version
-(: perlin (case-> (Flonum -> Flonum)
-                  (Flonum Flonum -> Flonum)
-                  (Flonum Flonum Flonum -> Flonum)))
+(: perlin
+   (case-> (Flonum -> Flonum)
+           (Flonum Flonum -> Flonum)
+           (Flonum Flonum Flonum -> Flonum)))
 (define (perlin x [y 0.0] [z 0.0])
   ; Find unit grid cell containing point
   (: X Integer) (: Y Integer) (: Z Integer)
@@ -128,16 +129,28 @@
   (mix nxy0 nxy1 w))
 
 ; 3D simplex noise
-#;(define F3 (/ 1.0 3.0)) ; Very nice and simple skew factor for 3D
-#;(define G3 (/ 1.0 6.0)) ; Very nice and simple unskew factor, too
-#;(define (simplex xin [yin 0.0] [zin 0.0])
+(: F3 Flonum) (: G3 Flonum)
+(define F3 (/ 1.0 3.0)) ; Very nice and simple skew factor for 3D
+(define G3 (/ 1.0 6.0)) ; Very nice and simple unskew factor, too
+(: simplex 
+   (case-> (Flonum -> Flonum)
+           (Flonum Flonum -> Flonum)
+           (Flonum Flonum Flonum -> Flonum)))
+(define (simplex xin [yin 0.0] [zin 0.0])
   ; Skew the input space to determine which simplex cell we're in
+  (: s Flonum)
   (define s (* (+ xin yin zin) F3)) 
+  
+  (: i Integer) (: j Integer) (: k Integer)
   (define i (fast-floor (+ xin s)))
   (define j (fast-floor (+ yin s)))
   (define k (fast-floor (+ zin s)))
   
-  (define t (* (+ i j k) G3))
+  (: t Flonum)
+  (define t (real->double-flonum (* (+ i j k) G3)))
+  
+  (: X0 Flonum) (: Y0 Flonum) (: Z0 Flonum)
+  (: x0 Flonum) (: y0 Flonum) (: z0 Flonum)
   (define X0 (- i t)) ; Unskew the cell origin back to (x,y,z) space
   (define Y0 (- j t))
   (define Z0 (- k t))
@@ -147,6 +160,8 @@
   
   ; For the 3D case, the simplex shape is a slightly irregular tetrahedron.
   ; Determine which simplex we are in.
+  (: i1 Integer) (: j1 Integer) (: k1 Integer) 
+  (: i2 Integer) (: j2 Integer) (: k2 Integer) 
   (define-values (i1 j1 k1 i2 j2 k2)
     (cond 
       [(and (>= x0 y0) (>= y0 z0)) (values 1 0 0 1 1 0)]   ; X Y Z order
@@ -160,6 +175,9 @@
   ; a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
   ; a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
   ; c = 1/6.
+  (: x1 Flonum) (: y1 Flonum) (: z1 Flonum) 
+  (: x2 Flonum) (: y2 Flonum) (: z2 Flonum) 
+  (: x3 Flonum) (: y3 Flonum) (: z3 Flonum) 
   (define x1 (+ (- x0 i1) G3)) ; Offsets for second corner in (x,y,z) coords
   (define y1 (+ (- y0 j1) G3))
   (define z1 (+ (- z0 k1) G3))
@@ -171,15 +189,19 @@
   (define z3 (+ (- z0 1.0) (* 3.0 G3)))
   
   ; Work out the hashed gradient indices of the four simplex corners
+  (: ii Integer) (: jj Integer) (: kk Integer) 
   (define ii (bitwise-and i 255))
   (define jj (bitwise-and j 255))
   (define kk (bitwise-and k 255))
+  
+  (: gi0 Integer) (: gi1 Integer) (: gi2 Integer) (: gi3 Integer) 
   (define gi0 (remainder (vector-ref perm (+ ii    (vector-ref perm (+ jj    (vector-ref perm kk))))) 12))
   (define gi1 (remainder (vector-ref perm (+ ii i1 (vector-ref perm (+ jj j1 (vector-ref perm (+ kk k1)))))) 12))
   (define gi2 (remainder (vector-ref perm (+ ii i2 (vector-ref perm (+ jj j2 (vector-ref perm (+ kk k2)))))) 12))
   (define gi3 (remainder (vector-ref perm (+ ii 1  (vector-ref perm (+ jj 1  (vector-ref perm (+ kk 1)))))) 12))
   
   ; Calculate the contribution from the four corners
+  (: t0 Flonum) (: n0 Flonum)
   (define t0 (- 0.5 (* x0 x0) (* y0 y0) (* z0 z0)))
   (define n0
     (if (< t0 0)
@@ -188,6 +210,7 @@
           (set! t0 (* t0 t0))
           (* t0 t0 (dot (vector-ref grad3 gi0) x0 y0 z0)))))
   
+  (: t1 Flonum) (: n1 Flonum)
   (define t1 (- 0.5 (* x1 x1) (* y1 y1) (* z1 z1)))
   (define n1
     (if (< t1 0)
@@ -196,6 +219,7 @@
           (set! t1 (* t1 t1))
           (* t1 t1 (dot (vector-ref grad3 gi1) x1 y1 z1)))))
   
+  (: t2 Flonum) (: n2 Flonum)
   (define t2 (- 0.5 (* x2 x2) (* y2 y2) (* z2 z2)))
   (define n2
     (if (< t2 0)
@@ -204,6 +228,7 @@
           (set! t2 (* t2 t2))
           (* t2 t2 (dot (vector-ref grad3 gi2) x2 y2 z2)))))
   
+  (: t3 Flonum) (: n3 Flonum)
   (define t3 (- 0.5 (* x3 x3) (* y3 y3) (* z3 z3)))
   (define n3
     (if (< t3 0)
