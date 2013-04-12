@@ -17,25 +17,28 @@
 
 (printf "\n--- no images ---\n")
 
-(printf " perlin: ")
-(time 
- (for ([x (in-range 256)])
-   (for ([y (in-range 256)])
-     (perlin (/ x 256.0) (/ y 256.0))))
- (void))
+(define (for-test f)
+  (printf "~a: " f)
+  (time 
+   (for ([x (in-range 256)])
+     (for ([y (in-range 256)])
+       (f (/ x 256.0) (/ y 256.0))))
+   (void)))
+ 
+(for-test perlin)
+(for-test simplex)
 
-(printf "simplex: ")
-(time 
- (for ([x (in-range 256)])
-   (for ([y (in-range 256)])
-     (simplex (/ x 256.0) (/ y 256.0))))
- (void))
+(printf "\n--- no images or loops ---\n")
 
-(printf " colors: ")
-(time 
- (for ([x (in-range 256)])
-   (for ([y (in-range 256)])
-     (simplex (/ x 256.0) (/ y 256.0) -1.0)
-     (simplex (/ x 256.0) (/ y 256.0)  0.0)
-     (simplex (/ x 256.0) (/ y 256.0)  1.0)))
- (void))
+(define (let-loop-test f)
+  (time
+   (let loop ([x 0] [y 0])
+     (cond
+       [(= x 256) (void)]
+       [(= y 256) (loop (+ x 1) 0)]
+       [else
+        (f (/ x 256.0) (/ y 256.0))
+        (loop x (+ y 1))]))))
+
+(let-loop-test perlin)
+(let-loop-test simplex)
