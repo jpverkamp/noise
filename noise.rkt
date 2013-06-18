@@ -221,7 +221,7 @@
   (define n1
     (if (< t1 0)
         0.0
-        (let ([t1^2 (* t0 t0)])
+        (let ([t1^2 (* t1 t1)])
           (* t1^2 t1^2 (dot (vector-ref grad3 gi1) x1 y1 z1)))))
 
   (: t2 Float) (: n2 Float)
@@ -229,7 +229,7 @@
   (define n2
     (if (< t2 0)
         0.0
-        (let ([t2^2 (* t0 t0)])
+        (let ([t2^2 (* t2 t2)])
           (* t2^2 t2^2 (dot (vector-ref grad3 gi2) x2 y2 z2)))))
 
   (: t3 Float) (: n3 Float)
@@ -237,7 +237,7 @@
   (define n3
     (if (< t3 0)
         0.0
-        (let ([t3^2 (* t0 t0)])
+        (let ([t3^2 (* t3 t3)])
           (* t3^2 t3^2 (dot (vector-ref grad3 gi3) x3 y3 z3)))))
 
   ; Add contributions from each corner to get the final noise value.
