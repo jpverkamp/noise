@@ -1,6 +1,6 @@
 #lang setup/infotab
 
-(define name "nosie")
+(define name "noise")
 (define scribblings '(("manual.scrbl" ())))
 
 (define blurb '("Perlin/Simplex noise generators."))
