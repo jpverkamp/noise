@@ -3,7 +3,7 @@
 (require
  images/flomap
  racket/flonum
- "noise.rkt")
+ "../noise.rkt")
 
 (provide
  build-perlin-image
