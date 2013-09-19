@@ -1,7 +1,7 @@
 #lang typed/racket
 
 (require 
- "../noise.rkt"
+ "../main.rkt"
  "generate-images.rkt")
 
 (printf "--- images ---\n")

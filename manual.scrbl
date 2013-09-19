@@ -29,7 +29,7 @@ This package provides Racket versions of the
 @section{Examples}
 
 @interaction[
-(require images/flomap racket/flonum "noise.rkt")
+(require images/flomap racket/flonum "main.rkt")
 (define (clamp min max n)
   (/ (- n min) (- max min)))
 
