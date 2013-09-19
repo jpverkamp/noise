@@ -16,6 +16,10 @@ This package provides Racket versions of the
 
 @url{https://github.com/jpverkamp/noise/}
 
+@section{Installation}
+
+@commandline{raco pkg install github://github.com/jpverkamp/noise/master}
+
 @section{Functions}
 
 @defproc[(perlin [x real?] [y real? 0.0] [z real? 0.0]) real?]{
@@ -29,7 +33,7 @@ This package provides Racket versions of the
 @section{Examples}
 
 @interaction[
-(require images/flomap racket/flonum "main.rkt")
+(require images/flomap racket/flonum noise)
 (define (clamp min max n)
   (/ (- n min) (- max min)))
 
@@ -47,7 +51,7 @@ This package provides Racket versions of the
    (build-flomap* 
     3 w h
     (lambda (x y)
-      (define g (clamp -1.0 1.0 (simplex (* scale (/ x w) (* scale (/ y h))))))
+      (define g (clamp -1.0 1.0 (simplex (* scale (/ x w)) (* scale (/ y h)))))
       (vector g g g)))))
 (build-simplex-image 256 256 #:scale 10.0)
 
