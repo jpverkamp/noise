@@ -4,7 +4,7 @@
 (define scribblings '(("manual.scrbl" ())))
 
 (define blurb '("Perlin/Simplex noise generators."))
-(define primary-file "noise/main.rkt")
+(define primary-file "main.rkt")
 (define homepage "https://github.com/jpverkamp/noise/")
 
 (define version "1.0")
