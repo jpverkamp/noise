@@ -18,15 +18,15 @@ This package provides Racket versions of the
 
 @section{Installation}
 
-@commandline{raco pkg install github://github.com/jpverkamp/noise/master}
+@commandline{raco pkg install noise}
 
 @section{Functions}
 
-@defproc[(perlin [x real?] [y real? 0.0] [z real? 0.0]) real?]{
+@defproc[#:link-target? #f (perlin [x real?] [y real? 0.0] [z real? 0.0]) real?]{
   Calculates the 1D, 2D, or 3D Perlin noise value at the given point.
 }
                
-@defproc[(simplex? [x real?] [y real? 0.0] [z real? 0.0]) real?]{
+@defproc[#:link-target? #f (simplex? [x real?] [y real? 0.0] [z real? 0.0]) real?]{
   Calculates the 1D, 2D, or 3D Simplex noise value at the given point.
 }
 
