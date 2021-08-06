@@ -7,8 +7,17 @@
 (define primary-file "main.rkt")
 (define homepage "https://github.com/jpverkamp/noise/")
 
-(define version "1.0")
-(define release-notes
-  '("Initial release."))
+(define deps
+  '("base"
+    "typed-racket-lib"))
+
+(define build-deps
+  '("images-doc"
+    "images-lib"
+    "racket-doc"
+    "scribble-lib"))
+
+(define version "1.0.1")
+(define release-notes '("Initial release + documentation updates."))
 
 (define required-core-version "5.3")
