@@ -26,7 +26,7 @@ This package provides Racket versions of the
   Calculates the 1D, 2D, or 3D Perlin noise value at the given point.
 }
                
-@defproc[#:link-target? #f (simplex? [x real?] [y real? 0.0] [z real? 0.0]) real?]{
+@defproc[#:link-target? #f (simplex [x real?] [y real? 0.0] [z real? 0.0]) real?]{
   Calculates the 1D, 2D, or 3D Simplex noise value at the given point.
 }
 
