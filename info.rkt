@@ -1,7 +1,7 @@
 #lang setup/infotab
 
 (define name "noise")
-(define scribblings '(("manual.scrbl" ())))
+(define scribblings '(("manual-noise.scrbl" ())))
 
 (define blurb '("Perlin/Simplex noise generators."))
 (define primary-file "main.rkt")
